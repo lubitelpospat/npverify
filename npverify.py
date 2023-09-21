@@ -15,10 +15,15 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("DIRECTORY", help="Directory to check - either run directory or directory with runs(requires --datadir flag)")
     parser.add_argument("--datadir",action="store_true", help="treat DIRECTORY as directory with multiple runs to test")
-    parser.add_argument("--check-fail",action="store_true", help="return status 1 if run(s) fail")
-    parser.add_argument("--ignore",type=str,dest="ignore")
-
-    return parser.parse_args()
+    parser.add_argument("--ignore",type=str,dest="ignore", help="comma-separated list of directories to ignore, requires --datadir")
+    
+    
+    args = parser.parse_args()
+    if len(args.ignore) > 0:
+        if not args.datadir:
+            print("--ignore requires --datadir argument, exiting now", file=sys.stderr)
+            sys.exit(1)
+    return args
 
 
 def validate_run_directory(dirname:str)->ValidationResult:
@@ -59,7 +64,22 @@ if __name__ == "__main__":
     args = parse_args()
     print(args)
     if args.datadir:
-        pass
+        dirs_to_ignore = set(args.ignore.strip().split(","))
+        dirs_to_check = list(filter(lambda x: not (x.name in dirs_to_ignore), pathlib.Path(args.DIRECTORY).glob("*")))
+        failed = False
+        for d in dirs_to_check:
+            vres = validate_run_directory(d)
+            if not vres.success:
+                print(f"[{d}] error: {vres.reason}", file=sys.stderr)
+
+                failed = True
+
+        if failed:
+            sys.exit(1)
+
+
+
+        
     else:
         res = validate_run_directory(args.DIRECTORY)
         if not res.success:

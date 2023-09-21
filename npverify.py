@@ -19,7 +19,7 @@ def parse_args():
     
     
     args = parser.parse_args()
-    if len(args.ignore) > 0:
+    if args.ignore and (len(args.ignore) > 0):
         if not args.datadir:
             print("--ignore requires --datadir argument, exiting now", file=sys.stderr)
             sys.exit(1)

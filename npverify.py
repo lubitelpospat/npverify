@@ -57,19 +57,21 @@ def validate_run_directory(dirname:str)->ValidationResult:
             if not ("fast5_pass" in map(lambda x: x.name, filter(lambda y: y.is_dir(), all_stuff_in_subrun))):
                 return ValidationResult(False, f"did not find fast5_pass in {subrun}")
             
-
-            if len ((subrun / "fastq_pass").glob("*.fastq*")) == 0:
+            fastq_files = list((subrun / "fastq_pass").glob("*.fastq*"))
+            
+            if len (fastq_files) == 0:
                 return ValidationResult(False, f"Did not find any fastq files in {subrun / 'fastq_pass' }")
             
 
-            if len ((subrun / "fast5_pass").glob("*.fast5")) == 0:
+            fast5_files = list((subrun / "fast5_pass").glob("*.fast5"))
+            if len (fast5_files) == 0:
                 return ValidationResult(False, f"Did not find any fast5 files in {subrun / 'fast5_pass' }")
             
 
 
-            fastq_basenames = set(map(lambda x: x.name.split(".")[0], (subrun / "fastq_pass").glob("*.fastq*")))
+            fastq_basenames = set(map(lambda x: x.name.split(".")[0], fastq_files))
 
-            fast5_basenames = set(map(lambda x: x.name.split(".")[0], (subrun / "fast5_pass").glob("*.fast5")))
+            fast5_basenames = set(map(lambda x: x.name.split(".")[0], fast5_files))
 
             if fastq_basenames != fast5_basenames:
                 return ValidationResult(False, f"files in fastq_pass and fast5_pass in {subrun} did not match ")

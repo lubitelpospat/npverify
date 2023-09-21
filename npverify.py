@@ -4,6 +4,10 @@ import argparse
 import sys
 from dataclasses import dataclass
 
+
+FASTQ_SUFFIXES = {"fastq", "fastq.gz"}
+FAST5_SUFFIXES = {"fast5"}
+
 @dataclass
 class ValidationResult:
     success: bool
@@ -45,13 +49,30 @@ def validate_run_directory(dirname:str)->ValidationResult:
 
         for subrun in subruns:
             all_stuff_in_subrun = list(subrun.glob("*"))
+
+            # check that fastq_pass and fast5_pass exist
             if not ("fastq_pass" in map(lambda x: x.name, filter(lambda y: y.is_dir(), all_stuff_in_subrun))):
                 return ValidationResult(False, f"did not find fastq_pass in {subrun}")
             
             if not ("fast5_pass" in map(lambda x: x.name, filter(lambda y: y.is_dir(), all_stuff_in_subrun))):
                 return ValidationResult(False, f"did not find fast5_pass in {subrun}")
+            
+
+            if len ((subrun / "fastq_pass").glob("*.fastq*")) == 0:
+                return ValidationResult(False, f"Did not find any fastq files in {subrun / 'fastq_pass' }")
+            
+
+            if len ((subrun / "fast5_pass").glob("*.fast5")) == 0:
+                return ValidationResult(False, f"Did not find any fast5 files in {subrun / 'fast5_pass' }")
+            
 
 
+            fastq_basenames = set(map(lambda x: x.name.split(".")[0], (subrun / "fastq_pass").glob("*.fastq*")))
+
+            fast5_basenames = set(map(lambda x: x.name.split(".")[0], (subrun / "fast5_pass").glob("*.fast5")))
+
+            if fastq_basenames != fast5_basenames:
+                return ValidationResult(False, f"files in fastq_pass and fast5_pass in {subrun} did not match ")
 
 
 
